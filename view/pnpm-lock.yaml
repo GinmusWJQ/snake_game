@@ -1,8 +1,12 @@
 lockfileVersion: 5.4
 
 specifiers:
+  snake_game: file:../pkg
   typescript: ^4.9.3
   vite: ^4.1.0
+
+dependencies:
+  snake_game: file:../pkg
 
 devDependencies:
   typescript: 4.9.5
@@ -351,3 +355,9 @@ packages:
     optionalDependencies:
       fsevents: 2.3.2
     dev: true
+
+  file:../pkg:
+    resolution: {directory: ../pkg, type: directory}
+    name: snake_game
+    version: 0.1.0
+    dev: false
