@@ -5,12 +5,25 @@ init().then((_) => {
   const WORLD_WIDTH = 32;
   const WORLD_SIZE = WORLD_WIDTH * WORLD_WIDTH;
   const SNAKE_SPAWN_IDX = Date.now() % WORLD_SIZE;
+  const FPS = 10;
   const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
   const worldWidth = world.width();
   const canvas = document.getElementById('snake-canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
   canvas.height = CELL_SIZE * worldWidth;
   canvas.width = CELL_SIZE * worldWidth;
+
+  document.addEventListener('keydown', (event) => {
+    if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
+      console.log('change dir to left');
+    } else if (event.code === 'ArrowUp' || event.code === 'KeyW') {
+      console.log('change dir to up');
+    } else if (event.code === 'ArrowRight' || event.code === 'KeyD') {
+      console.log('change dir to right');
+    } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
+      console.log('change dir to down');
+    }
+  });
 
   function drawWorld() {
     ctx.beginPath();
@@ -45,13 +58,12 @@ init().then((_) => {
       clearTimeout(timer);
     }
     return () => {
-      const fps = 30;
       let t = setTimeout(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         world.update();
         paint();
         requestAnimationFrame(update(t));
-      }, 1000 / fps);
+      }, 1000 / FPS);
     };
   }
 
