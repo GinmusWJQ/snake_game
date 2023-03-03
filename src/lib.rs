@@ -40,12 +40,18 @@ pub struct World {
 
 #[wasm_bindgen]
 impl World {
-    pub fn new(width: usize, snake_idx: usize, direction: Direction, snake_size: usize) -> Self {
+    pub fn new(
+        width: usize,
+        snake_idx: usize,
+        direction: Direction,
+        snake_size: usize,
+        reward_cell: usize,
+    ) -> Self {
         World {
             width,
             size: width * width,
             snake: Snake::new(snake_idx, direction, snake_size),
-            reward_cell: 10,
+            reward_cell,
         }
     }
 

@@ -12,7 +12,8 @@ init().then((wasm) => {
     WORLD_WIDTH,
     SNAKE_SPAWN_IDX,
     currentDirection,
-    snakeSize
+    snakeSize,
+    Date.now() % WORLD_SIZE
   );
   const worldWidth = world.width();
   const canvas = document.getElementById('snake-canvas') as HTMLCanvasElement;
