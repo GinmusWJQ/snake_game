@@ -1,27 +1,43 @@
-import init, { World } from 'snake_game';
+import init, { World, Direction } from 'snake_game';
 
-init().then((_) => {
+init().then((wasm) => {
   const CELL_SIZE = 20;
   const WORLD_WIDTH = 32;
   const WORLD_SIZE = WORLD_WIDTH * WORLD_WIDTH;
   const SNAKE_SPAWN_IDX = Date.now() % WORLD_SIZE;
   const FPS = 10;
-  const world = World.new(WORLD_WIDTH, SNAKE_SPAWN_IDX);
+  let currentDirection: Direction = Direction.Right;
+  let snakeSize: number = 5;
+  const world = World.new(
+    WORLD_WIDTH,
+    SNAKE_SPAWN_IDX,
+    currentDirection,
+    snakeSize
+  );
   const worldWidth = world.width();
   const canvas = document.getElementById('snake-canvas') as HTMLCanvasElement;
   const ctx = canvas.getContext('2d')!;
   canvas.height = CELL_SIZE * worldWidth;
   canvas.width = CELL_SIZE * worldWidth;
 
+  /**添加键盘点击事件 */
   document.addEventListener('keydown', (event) => {
-    if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
-      console.log('change dir to left');
-    } else if (event.code === 'ArrowUp' || event.code === 'KeyW') {
-      console.log('change dir to up');
-    } else if (event.code === 'ArrowRight' || event.code === 'KeyD') {
-      console.log('change dir to right');
-    } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
-      console.log('change dir to down');
+    const keyMapDirection: Record<string, Direction | undefined> = {
+      ArrowLeft: Direction.Left,
+      KeyA: Direction.Left,
+      ArrowUp: Direction.Up,
+      KeyW: Direction.Up,
+      ArrowRight: Direction.Right,
+      KeyD: Direction.Right,
+      ArrowDown: Direction.Down,
+      KeyS: Direction.Down,
+    };
+    const targetDirection = keyMapDirection[event.code];
+    if (typeof targetDirection !== 'undefined') {
+      if (targetDirection !== currentDirection) {
+        world.change_snake_dir(targetDirection);
+        currentDirection = targetDirection;
+      }
     }
   });
 
@@ -39,11 +55,29 @@ init().then((_) => {
   }
 
   function drawSnake() {
-    const snakeIdx = world.snake_head_idx();
-    const col = snakeIdx % worldWidth;
-    const row = Math.floor(snakeIdx / worldWidth);
+    const snakeCells = new Uint32Array(
+      wasm.memory.buffer,
+      world.snake_cells(),
+      world.snake_len()
+    );
 
+    snakeCells.forEach((cellIdx, i) => {
+      const col = cellIdx % worldWidth;
+      const row = Math.floor(cellIdx / worldWidth);
+
+      ctx.fillStyle = i == 0 ? '#7878bd' : '#000';
+      ctx.beginPath();
+      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      ctx.stroke();
+    });
+  }
+
+  function drawReward() {
+    const idx = world.reward_cell();
+    const col = idx % worldWidth;
+    const row = Math.floor(idx / worldWidth);
     ctx.beginPath();
+    ctx.fillStyle = '#FF0000';
     ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
     ctx.stroke();
   }
@@ -51,6 +85,7 @@ init().then((_) => {
   function paint() {
     drawWorld();
     drawSnake();
+    drawReward();
   }
 
   function update(timer?: number) {
@@ -60,7 +95,7 @@ init().then((_) => {
     return () => {
       let t = setTimeout(() => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        world.update();
+        world.step();
         paint();
         requestAnimationFrame(update(t));
       }, 1000 / FPS);
