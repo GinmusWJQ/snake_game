@@ -11,6 +11,12 @@ pub enum Direction {
     Right,
     Left,
 }
+#[wasm_bindgen]
+pub enum GameStatus {
+    Won,
+    Lost,
+    Played,
+}
 
 #[wasm_bindgen]
 #[derive(Clone, PartialEq)]
@@ -37,6 +43,7 @@ pub struct World {
     size: usize,
     snake: Snake,
     reward_cell: usize,
+    status: Option<GameStatus>,
 }
 
 #[wasm_bindgen]
@@ -44,17 +51,13 @@ impl World {
     pub fn new(width: usize, snake_idx: usize, direction: Direction, snake_size: usize) -> Self {
         let size = width * width;
         let snake = Snake::new(snake_idx, direction, snake_size);
-        let reward_cell = loop {
-            let temp_reward_cell = Math::floor(Math::random() * (size as f64)) as usize;
-            if !snake.body.contains(&SnakeCell(temp_reward_cell)) {
-                break temp_reward_cell;
-            }
-        };
+        let reward_cell = Self::gen_reward_cell(size, &snake.body);
         World {
             width,
             size,
             snake,
             reward_cell,
+            status: Some(GameStatus::Played),
         }
     }
 
@@ -64,6 +67,16 @@ impl World {
 
     pub fn reward_cell(&self) -> usize {
         self.reward_cell
+    }
+
+    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> usize {
+        assert!(snake_body.len() < max, "已经没有多的空间可以生成奖励块了");
+        loop {
+            let temp_reward_cell = Math::floor(Math::random() * (max as f64)) as usize;
+            if !snake_body.contains(&SnakeCell(temp_reward_cell)) {
+                break temp_reward_cell;
+            }
+        }
     }
 
     /// `snake_head_idx`返回蛇头所处的index
@@ -79,6 +92,22 @@ impl World {
      *  ```
      * */
     pub fn step(&mut self) {
+        match self.status {
+            Some(GameStatus::Played) => self.move_whole_snake(),
+            Some(GameStatus::Lost) => {}
+            Some(GameStatus::Won) => {}
+            None => {}
+        }
+    }
+
+    /** `move_whole_snake`移动整个蛇的位置，具体做法就是并找到每一个SnakeCell的下一个位置，然后更新到自身`self.snake.body`中
+     *  #Example
+     *  ```
+     *  //直接调用即可
+     *  self.move_whole_snake()
+     *  ```
+     * */
+    fn move_whole_snake(&mut self) {
         let temp = self.snake.body.clone();
         let next_cell = self.gen_next_snake_cell(&self.snake.direction);
         self.snake.body[0] = next_cell;
@@ -87,6 +116,13 @@ impl World {
 
         for i in 1..len {
             self.snake.body[i] = SnakeCell(temp[i - 1].0)
+        }
+
+        if self.reward_cell == self.snake_head_idx() {
+            if self.snake.body.len() < self.size {
+                self.snake.body.push(SnakeCell(self.snake.body[1].0));
+                self.reward_cell = Self::gen_reward_cell(self.size, &self.snake.body);
+            };
         }
     }
 
