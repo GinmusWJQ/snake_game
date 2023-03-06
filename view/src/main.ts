@@ -1,10 +1,11 @@
 import init, { World, Direction } from 'snake_game';
+import { random } from '../utils/random';
 
 init().then((wasm) => {
   const CELL_SIZE = 20;
   const WORLD_WIDTH = 32;
   const WORLD_SIZE = WORLD_WIDTH * WORLD_WIDTH;
-  const SNAKE_SPAWN_IDX = Date.now() % WORLD_SIZE;
+  const SNAKE_SPAWN_IDX = random(WORLD_SIZE);
   const FPS = 10;
   let currentDirection: Direction = Direction.Right;
   let snakeSize: number = 5;
@@ -12,8 +13,7 @@ init().then((wasm) => {
     WORLD_WIDTH,
     SNAKE_SPAWN_IDX,
     currentDirection,
-    snakeSize,
-    Date.now() % WORLD_SIZE
+    snakeSize
   );
   const worldWidth = world.width();
   const canvas = document.getElementById('snake-canvas') as HTMLCanvasElement;

@@ -1,3 +1,4 @@
+use js_sys::Math;
 use wasm_bindgen::prelude::*;
 
 #[global_allocator]
@@ -12,7 +13,7 @@ pub enum Direction {
 }
 
 #[wasm_bindgen]
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub struct SnakeCell(usize);
 #[wasm_bindgen]
 pub struct Snake {
@@ -40,17 +41,19 @@ pub struct World {
 
 #[wasm_bindgen]
 impl World {
-    pub fn new(
-        width: usize,
-        snake_idx: usize,
-        direction: Direction,
-        snake_size: usize,
-        reward_cell: usize,
-    ) -> Self {
+    pub fn new(width: usize, snake_idx: usize, direction: Direction, snake_size: usize) -> Self {
+        let size = width * width;
+        let snake = Snake::new(snake_idx, direction, snake_size);
+        let reward_cell = loop {
+            let temp_reward_cell = Math::floor(Math::random() * (size as f64)) as usize;
+            if !snake.body.contains(&SnakeCell(temp_reward_cell)) {
+                break temp_reward_cell;
+            }
+        };
         World {
             width,
-            size: width * width,
-            snake: Snake::new(snake_idx, direction, snake_size),
+            size,
+            snake,
             reward_cell,
         }
     }
