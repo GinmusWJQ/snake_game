@@ -42,7 +42,7 @@ pub struct World {
     width: usize,
     size: usize,
     snake: Snake,
-    reward_cell: usize,
+    reward_cell: Option<usize>,
     status: Option<GameStatus>,
 }
 
@@ -65,16 +65,16 @@ impl World {
         self.width
     }
 
-    pub fn reward_cell(&self) -> usize {
+    pub fn reward_cell(&self) -> Option<usize> {
         self.reward_cell
     }
 
-    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> usize {
+    fn gen_reward_cell(max: usize, snake_body: &Vec<SnakeCell>) -> Option<usize> {
         assert!(snake_body.len() < max, "已经没有多的空间可以生成奖励块了");
         loop {
             let temp_reward_cell = Math::floor(Math::random() * (max as f64)) as usize;
             if !snake_body.contains(&SnakeCell(temp_reward_cell)) {
-                break temp_reward_cell;
+                break Some(temp_reward_cell);
             }
         }
     }
@@ -117,12 +117,18 @@ impl World {
         for i in 1..len {
             self.snake.body[i] = SnakeCell(temp[i - 1].0)
         }
+        if self.snake.body[1..].contains(&self.snake.body[0]) {
+            self.status = Some(GameStatus::Lost);
+        };
 
-        if self.reward_cell == self.snake_head_idx() {
+        if self.reward_cell == Some(self.snake_head_idx()) {
             if self.snake.body.len() < self.size {
                 self.snake.body.push(SnakeCell(self.snake.body[1].0));
                 self.reward_cell = Self::gen_reward_cell(self.size, &self.snake.body);
-            };
+            } else {
+                self.reward_cell = None;
+                self.status = Some(GameStatus::Won);
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-import init, { World, Direction } from 'snake_game';
+import init, { World, Direction, GameStatus } from 'snake_game';
 import { random } from '../utils/random';
 
 init().then((wasm) => {
@@ -62,25 +62,29 @@ init().then((wasm) => {
       world.snake_len()
     );
 
-    snakeCells.forEach((cellIdx, i) => {
-      const col = cellIdx % worldWidth;
-      const row = Math.floor(cellIdx / worldWidth);
+    snakeCells
+      .filter((cellIdx, i) => !(i > 0 && cellIdx === snakeCells[0]))
+      .forEach((cellIdx, i) => {
+        const col = cellIdx % worldWidth;
+        const row = Math.floor(cellIdx / worldWidth);
 
-      ctx.fillStyle = i == 0 ? '#7878bd' : '#000';
-      ctx.beginPath();
-      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-      ctx.stroke();
-    });
+        ctx.fillStyle = i == 0 ? '#7878bd' : '#000';
+        ctx.beginPath();
+        ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+        ctx.stroke();
+      });
   }
 
   function drawReward() {
     const idx = world.reward_cell();
-    const col = idx % worldWidth;
-    const row = Math.floor(idx / worldWidth);
-    ctx.beginPath();
-    ctx.fillStyle = '#FF0000';
-    ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
-    ctx.stroke();
+    if (idx) {
+      const col = idx % worldWidth;
+      const row = Math.floor(idx / worldWidth);
+      ctx.beginPath();
+      ctx.fillStyle = '#FF0000';
+      ctx.fillRect(col * CELL_SIZE, row * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+      ctx.stroke();
+    }
   }
 
   function paint() {
